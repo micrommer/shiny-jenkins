@@ -1,5 +1,8 @@
 FROM maven:3.9.1-eclipse-temurin-8-alpine
 
+RUN apk add git
+RUN git --version
+
 RUN apk add yarn
 RUN yarn --version 
 
