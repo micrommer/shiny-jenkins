@@ -3,9 +3,14 @@ pipeline {
         docker { image 'mvn-loaded:latest' }
     }
     stages {
-        stage('check-version') {
+        stage('cloning ...') {
             steps {
-                sh 'mvn --version'
+                git url: 'https://github.com/thingsboard/thingsboard.git', branch: 'master'
+            }
+        }
+        stage('building ...') {
+            steps {
+                sh ' mvn -T 4 clean install -DskipTests --fail-at-end -Dlicense.skip=true'
             }
         }
     }
