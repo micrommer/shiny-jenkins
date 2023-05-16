@@ -1,8 +1,13 @@
 FROM maven:3.9.1-eclipse-temurin-8-alpine
 
+RUN apk add yarn
+RUN yarn --version 
+
 WORKDIR home/
 COPY pom.xml .
 RUN mvn -T 4 -B dependency:resolve
+
+WORKDIR /
 
 # Container will be alive after lanch
 ENTRYPOINT ["tail", "-f", "/dev/null"]
