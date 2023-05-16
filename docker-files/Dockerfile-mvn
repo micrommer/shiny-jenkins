@@ -1,0 +1,8 @@
+FROM maven:3.9.1-eclipse-temurin-8-alpine
+
+WORKDIR home/
+COPY pom.xml .
+RUN mvn -T 4 -B dependency:resolve
+
+# Container will be alive after lanch
+ENTRYPOINT ["tail", "-f", "/dev/null"]
