@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        docker { image 'mvn-loaded:latest' }
+        docker { image 'tb-builder:latest' }
     }
     stages {
         stage('cloning ...') {
@@ -10,7 +10,7 @@ pipeline {
         }
         stage('building ...') {
             steps {
-                sh ' mvn -T 4 clean install -DskipTests --fail-at-end -Dlicense.skip=true'
+                sh ' mvn -T 4 install -DskipTests --fail-at-end -Dlicense.skip=true'
             }
         }
     }
