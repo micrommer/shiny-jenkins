@@ -1,11 +1,11 @@
 pipeline {
     agent {
-        docker { image 'postgres:12.8' }
+        docker { image 'mvn-loaded:latest' }
     }
     stages {
         stage('check-version') {
             steps {
-                sh 'psql --version'
+                sh 'mvn --version'
             }
         }
     }
