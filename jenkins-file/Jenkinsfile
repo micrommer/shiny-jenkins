@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('cloning ...') {
             steps {
-                git url: "https://${GITHUB_CLASSIC_TOKEN}@github.com/micrommer/things-board-mirror.git",branch: 'main'
+                git url: "https://${GITHUB_CLASSIC_TOKEN}@github.com/micrommer/things-board-mirror.git", branch: 'main'
             }
         }
         stage('building ...') {
