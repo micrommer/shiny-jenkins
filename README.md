@@ -8,3 +8,4 @@ container that could execute docker-pipeline on your local machine, some extra s
 
 ## JENKINS-FILES
 > A place to keep track Jenkinsfile history.
+- It's required to setup a secret credential text in jenkin's admin panel to connect to the git repo.
