@@ -2,15 +2,19 @@ pipeline {
     agent {
         docker { image 'tb-builder:latest' }
     }
+    environment {
+        GITHUB_CLASSIC_TOKEN = credentials('ce266204-3330-477a-8c6a-6adabe6c68b1')
+    }
+
     stages {
         stage('cloning ...') {
             steps {
-                git url: 'https://github.com/thingsboard/thingsboard.git', branch: 'master'
+                git url: "https://${GITHUB_CLASSIC_TOKEN}@github.com/micrommer/things-board-mirror.git",branch: 'main'
             }
         }
         stage('building ...') {
             steps {
-                sh ' mvn -T 4 install -DskipTests --fail-at-end -Dlicense.skip=true'
+                sh 'mvn -T 8 clean install  -DskipTests --fail-at-end -Dlicense.skip=true'
             }
         }
     }
