@@ -1,0 +1,18 @@
+FROM maven:3.9.1-eclipse-temurin-8-alpine
+
+RUN apk add git
+RUN git --version
+
+RUN apk add yarn
+RUN yarn --version 
+
+WORKDIR home/
+
+# Copy pre-build project
+ARG PROJECT_DIR
+# Docke doesn't support abs dir, so this Dokcerfile should be in same folder as project root
+COPY $PROJECT_DIR .
+
+
+# Container will be alive after lanch
+ENTRYPOINT ["tail", "-f", "/dev/null"]
