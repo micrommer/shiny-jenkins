@@ -3,13 +3,13 @@ pipeline {
         docker { image 'tb-builder:latest' }
     }
     environment {
-        GITHUB_CLASSIC_TOKEN = credentials('ce266204-3330-477a-8c6a-6adabe6c68b1')
+        GITLAB_CLASSIC_TOKEN = credentials('a210d2e7-e10f-42a9-8b47-4e471b22e104')
     }
 
     stages {
         stage('cloning ...') {
             steps {
-                git url: "https://${GITHUB_CLASSIC_TOKEN}@github.com/micrommer/things-board-mirror.git", branch: 'main'
+                git url: "https://${GITLAB_CLASSIC_TOKEN}@github.com/micrommer/things-board-mirror.git", branch: 'main'
             }
         }
         stage('building ...') {
