@@ -1,14 +1,38 @@
-FROM maven:3.9.1-eclipse-temurin-8-alpine
+FROM maven:3.9.2-amazoncorretto-11-debian-bullseye
 
-RUN apk add git
-RUN git --version
+USER root
 
-RUN apk add yarn
-RUN yarn --version 
+# install required tools
+RUN apt update
+RUN apt upgrade
+RUN apt install unzip -y
+RUN apt install zip -y
+RUN apt install curl -y
+RUN apt install wget -y
 
-WORKDIR home/
-COPY pom.xml .
-RUN mvn -T 4 -B dependency:resolve
+# install gradle
+RUN wget https://downloads.gradle-dn.com/distributions/gradle-7.1.1-bin.zip
+RUN unzip gradle-7.1.1-bin.zip
+ENV GRADLE_HOME /gradle-7.1.1
+ENV PATH $PATH:/gradle-7.1.1/bin
+RUN gradle --version
+
+# install node 16.15
+RUN apt install -y curl
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+RUN apt install -y nodejs
+RUN node --version
+
+# install yarn
+RUN npm install --global yarn
+RUN yarn --version
+
+# install Git
+RUN apt install git -y
+
+# WORKDIR home/
+# COPY pom.xml .
+# RUN mvn -T 4 -B dependency:resolve
 
 WORKDIR /
 
