@@ -11,51 +11,28 @@ pipeline {
     }
 
     stages {
-        // stage('Docker building ...') {
-        //     agent {
-        //         docker {
-        //             image 'dockerizer:latest'
-        //             args '-v /var/run/docker.sock:/var/run/docker.sock'
-        //         }
-        //     }            
-        //     steps {
-        //         sh 'cd msa/tb/docker-postgres'
-        //         sh 'docker build . -t gitlab/tb-postgres:latest --no-cache --file msa/tb/docker-postgres/Dockerfile'
-        //     }
-        // }
         stage('Git cloning ...') {
-            // agent {
-            //    docker { image 'tb-builder:latest' }
-            // }
             steps {
                 // using http instead https for dev server                 
                 git url: "http://${GITLAB_USER}:${GITLAB_CLASSIC_TOKEN}@172.16.4.23/platform/platform.git", branch: 'build-on-jenkins'
             }
         }
-        stage('Docker Building'){
-            steps{
-                dir('msa/tb'){
-                    sh 'pwd'
-                    sh 'mvn clean install  -DskipTests -Dlicense.skip=truels -Ddockerfile.skip=false'
-                }
+        stage('Maven building ...') {
+            steps {
+                // Use cloudflare DNS instead of Google
+                sh 'echo "nameserver 1.1.1.1" > /etc/resolv.conf'
+                sh 'cat /etc/resolv.conf'
+                // Set mac heap size for maven
+                sh 'export MAVEN_OPTS="-Xmx6g"'
+                // Clean maven cache 
+                sh 'rm -rf ~/.m2/repository'
+                sh 'rm -rf ~/.gradle/caches/'
+                sh 'rm -rf ui-ngx/node_modules'
+                // Build searially
+                // In case of parallel building, the build will be successful randomly! (Race condition bug in Gradle downloading)
+                sh 'mvn clean install -DskipTests -Dlicense.skip=true -Ddockerfile.skip=false'
             }
         }
-        // stage('Maven building ...') {
-        //     steps {
-        //         // Use cloudflare DNS instead of Google
-        //         sh 'echo "nameserver 1.1.1.1" > /etc/resolv.conf'
-        //         sh 'cat /etc/resolv.conf'
-        //         // Set mac heap size for maven
-        //         sh 'export MAVEN_OPTS="-Xmx6g"'
-        //         // Clean maven cache 
-        //         sh 'rm -rf ~/.m2/repository'
-        //         sh 'rm -rf ~/.gradle/caches/'
-        //         sh 'rm -rf ui-ngx/node_modules'
-        //         // Build searially
-        //         // In case of parallel building, the build will be successful randomly! (Race condition bug in Gradle downloading)
-        //         sh 'mvn clean install -DskipTests -Dlicense.skip=true'
-        //     }
-        // }
 
     }
 }
