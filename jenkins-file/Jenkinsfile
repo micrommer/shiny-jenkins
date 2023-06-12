@@ -10,7 +10,8 @@ pipeline {
         GITLAB_USER = 'iman.bhlool'
         IMAGE_PREFIX = 'controlix'
         IMAGES_CANDIDATES = "${IMAGE_PREFIX}/tb-postgres"
-        REGISTRY_HOST = 'registry'
+        REGISTRY_HOST_NAME = 'registry'
+        REGISTRY_HOST_IP = sh (script: "dig +short ${REGISTRY_HOST_NAME}", returnStdout: true).trim()
         REGISTRY_PORT = '5000'
     }
 
@@ -40,9 +41,9 @@ pipeline {
 
         stage('Image Pushing ...') {
             steps {
-                echo "Taging : ${IMAGES_CANDIDATES} ${REGISTRY_HOST}:${REGISTRY_PORT}/${IMAGES_CANDIDATES}"
-                sh "docker tag ${IMAGES_CANDIDATES} ${REGISTRY_HOST}:${REGISTRY_PORT}/${IMAGES_CANDIDATES}"
-                sh "docker push ${REGISTRY_HOST}:${REGISTRY_PORT}/${IMAGES_CANDIDATES}"
+                echo "Taging : ${IMAGES_CANDIDATES} ${REGISTRY_HOST_IP}:${REGISTRY_PORT}/${IMAGES_CANDIDATES}"
+                sh "docker tag ${IMAGES_CANDIDATES} ${REGISTRY_HOST_IP}:${REGISTRY_PORT}/${IMAGES_CANDIDATES}"
+                sh "docker push ${REGISTRY_HOST_IP}:${REGISTRY_PORT}/${IMAGES_CANDIDATES}"
             }
         }
 

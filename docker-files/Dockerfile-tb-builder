@@ -30,12 +30,11 @@ RUN yarn --version
 # install Git
 RUN apt install git -y
 
+# Install dig for service discovery
+RUN apt install dnsutils -y
+
 # Install docker CLI
 RUN curl -sSL https://get.docker.com/ | sh
-
-# WORKDIR home/
-# COPY pom.xml .
-# RUN mvn -T 4 -B dependency:resolve
 
 WORKDIR /
 
