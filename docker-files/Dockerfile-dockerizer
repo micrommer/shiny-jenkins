@@ -1,0 +1,10 @@
+FROM debian:11.7-slim
+
+RUN apt update
+RUN apt install curl -y
+
+# Install docker CLI
+RUN curl -sSL https://get.docker.com/ | sh
+
+# Container will be alive after lanch
+ENTRYPOINT ["tail", "-f", "/dev/null"]

@@ -13,3 +13,9 @@ services:
    - /var/jenkins_home/plugins:/var/jenkins_home/plugins
   environment:
    - JAVA_OPTS="-Djava.util.logging.config.file=/var/jenkins_home/log.properties"
+
+ registry:
+  image: registry:latest
+  container_name: registry
+  ports:
+   - 5000:5000
