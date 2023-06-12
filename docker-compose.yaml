@@ -13,9 +13,19 @@ services:
    - /var/jenkins_home/plugins:/var/jenkins_home/plugins
   environment:
    - JAVA_OPTS="-Djava.util.logging.config.file=/var/jenkins_home/log.properties"
+  networks:
+   - shiny-jenkins
+
 
  registry:
   image: registry:latest
   container_name: registry
   ports:
    - 5000:5000
+  networks:
+   - shiny-jenkins
+
+networks:
+  shiny-jenkins:
+   name: shiny-jenkins
+  

@@ -14,3 +14,4 @@ container that could execute docker-pipeline on your local machine, some extra s
 ## DOCKER-COMPOSE
 - `Jenkins` service need a docker.sock to comunicate with local docker, so the sock valoume should be mounted.
 - For docker container registry we need to launch new service that called `registry` service, it gonna be the gitlab containers registry alternative for a while.
+- We need to create a specific network to share it with `tb-builder`, so `shiny-jenkins` network exists in compose
