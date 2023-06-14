@@ -1,0 +1,11 @@
+FROM debian:11.7-slim
+
+# Install tools
+RUN apt update
+RUN apt install curl -y
+
+# Install psql CLI
+RUN apt install -y postgresql-client
+RUN psql --version
+
+ENTRYPOINT ["tail", "-f", "/dev/null"]

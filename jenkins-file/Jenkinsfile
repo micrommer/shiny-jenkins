@@ -1,0 +1,5 @@
+pipeline {
+    agent{
+         image 'tb-deployer:latest'
+    }
+}
