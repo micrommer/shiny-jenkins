@@ -1,62 +1,11 @@
-pipeline {
-    agent {
-        docker {
-            image 'tb-builder:latest'
-            args '-v /var/run/docker.sock:/var/run/docker.sock --net=shiny-jenkins'
-        }
-    }
-    environment {
-        GITLAB_CLASSIC_TOKEN = credentials('a210d2e7-e10f-42a9-8b47-4e471b22e104')
-        GITLAB_USER = 'iman.bhlool'
-        IMAGE_PREFIX = 'controlix'
-        IMAGES_CANDIDATES = "${IMAGE_PREFIX}/tb-postgres"
-        REGISTRY_HOST_NAME = 'registry'
-        REGISTRY_HOST_IP = sh (script: "dig +short ${REGISTRY_HOST_NAME}", returnStdout: true).trim()
-        REGISTRY_PORT = '5000'
-    }
-
-    stages {
-        stage('Git cloning ...') {
-            steps {
-                // using http instead https for dev server
-                git url: "http://${GITLAB_USER}:${GITLAB_CLASSIC_TOKEN}@172.16.4.23/platform/platform.git", branch: 'build-on-jenkins'
-            }
-        }
-        stage('Maven building ...') {
-            steps {
-                // Use cloudflare DNS instead of Google
-                sh 'echo "nameserver 1.1.1.1" > /etc/resolv.conf'
-                sh 'cat /etc/resolv.conf'
-                // Set mac heap size for maven
-                sh 'export MAVEN_OPTS="-Xmx6g"'
-                // Clean maven cache
-                sh 'rm -rf ~/.m2/repository'
-                sh 'rm -rf ~/.gradle/caches/'
-                sh 'rm -rf ui-ngx/node_modules'
-                // Build searially
-                // In case of parallel building, the build will be successful randomly! (Race condition bug in Gradle downloading)
-                sh 'mvn clean install -DskipTests -Dlicense.skip=true -Ddockerfile.skip=false'
-            }
-        }
-
-        stage('Image Pushing ...') {
-            steps {
-                echo "Taging : ${IMAGES_CANDIDATES} ${REGISTRY_HOST_IP}:${REGISTRY_PORT}/${IMAGES_CANDIDATES}"
-                sh "docker tag ${IMAGES_CANDIDATES} ${REGISTRY_HOST_IP}:${REGISTRY_PORT}/${IMAGES_CANDIDATES}"
-                sh "docker push ${REGISTRY_HOST_IP}:${REGISTRY_PORT}/${IMAGES_CANDIDATES}"
-            }
-        }
-
-        stage('Docker Pruning ...') {
-            steps {
-                script {
-                    try {
-                        sh 'docker rmi --force  $(docker images --filter=reference="${IMAGE_PREFIX}/*" -q)'
-                    } finally {
-                        echo 'Docker pruned!'
-                    }
-                }
-            }
-        }
-    }
+node {
+  def remote = [:]
+  remote.name = 'dev2'
+  remote.host = '172.16.4.3'
+  remote.user = 'root'
+  remote.password = 'qw12'
+  remote.allowAnyHosts = true
+  stage('Remote SSH') {
+    sshCommand remote: remote, command: "ls -lrt" 
+  }
 }
