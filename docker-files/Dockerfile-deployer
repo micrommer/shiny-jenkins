@@ -3,6 +3,7 @@ FROM debian:11.7-slim
 # Install tools
 RUN apt update
 RUN apt install curl -y
+RUN apt install openssh-client -y
 
 # Install psql CLI
 RUN apt install -y postgresql-client

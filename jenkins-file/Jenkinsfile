@@ -1,5 +1,18 @@
 pipeline {
-    agent{
-         image 'tb-deployer:latest'
+    agent {
+        docker {
+            image 'tb-deployer:latest'
+            args '-v /var/run/docker.sock:/var/run/docker.sock --net=shiny-jenkins'
+        }
+    }
+    environment {
+        SSH_PREFIX = 'ssh root@172.16.4.3'
+    }
+    stages {
+        stage("Check env ..."){
+            steps{
+                sh '${SSH_PREFIX} psql --version'
+            }
+        }
     }
 }
