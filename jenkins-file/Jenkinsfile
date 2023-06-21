@@ -1,18 +1,44 @@
-pipeline {
-    agent {
-        docker {
-            image 'tb-deployer:latest'
-            args '-v /var/run/docker.sock:/var/run/docker.sock --net=shiny-jenkins'
-        }
-    }
-    environment {
-        SSH_PREFIX = 'ssh root@172.16.4.3'
-    }
-    stages {
-        stage("Check env ..."){
-            steps{
-                sh '${SSH_PREFIX} psql --version'
-            }
-        }
-    }
+import groovy.time.DateFormatter
+
+node {
+  def remote = [:]
+  remote.name = 'dev2'
+  remote.host = '172.16.4.3'
+  remote.user = 'root'
+  remote.password = 'qw12'
+  remote.allowAnyHosts = true
+
+  def getCurrentTime() {
+    // Get the current time in milliseconds.
+    long timestamp = System.currentTimeMillis()
+
+    // Create a DateFormatter object.
+    DateFormatter formatter = new DateFormatter('yyyy-MM-dd_HH-mm-ss')
+
+    // Format the current time.
+    formatter.format(timestamp)
+  }
+
+  def DB_NAME = 'thingsboard'
+  // backup name format = System name + database name + date + time + backup type
+  def BACKUP_FILE_NAME = "${remote.name}-${DB_NAME}-${getCurrentTime()}-FULL.sql"
+  def DB_BACK_UP_COMMAND = "pg_dump -U postgres -d ${DB_NAME} > ${BACKUP_FILE_NAME}"
+
+  stage('Checking host ...') {
+    sshCommand remote: remote, command: "docker --version" , failOnError: true
+    sshCommand remote: remote, command: "psql --version" , failOnError: true
+  }
+
+  stage('Backuping DB ...') {
+    sshCommand remote: remote, command: DB_BACK_UP_COMMAND, failOnError: true
+    sshGet remote: remote, from: BACKUP_FILE_NAME, into: BACKUP_FILE_NAME, override: true, failOnError: true
+  }
+
+  def DOCKER_REGISTRY_HOST = "172.16.4.10"
+  def DOCKER_PULL_COMMAND = "docker pull ${DOCKER_REGISTRY_HOST}:"
+
+  stage('Pulling docker image ...') {
+        sshCommand remote: remote, command: DB_BACK_UP_COMMAND, failOnError: true
+  }
+
 }
