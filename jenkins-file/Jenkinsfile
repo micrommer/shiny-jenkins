@@ -19,28 +19,40 @@ node {
   remote.password = 'qw12'
   remote.allowAnyHosts = true
 
-  def POSTGRESQL_VERSION = '14'
-  def DB_NAME = 'thingsboard'
-  // backup name format = System name + database name + date + time + backup type
-  def BACKUP_FILE_NAME = "${remote.name}-${DB_NAME}-${getCurrentTime()}-FULL.sql"
-  def GO_TO_BACKUP_FOLDER = "cd \$HOME/" + POSTGRESQL_VERSION + "/backups"
-  def DB_BACK_UP_COMMAND = "sudo -u postgres sh -c 'cd \$HOME/" + POSTGRESQL_VERSION  + "/backups && pwd && pg_dump -U postgres -d ${DB_NAME} > ${BACKUP_FILE_NAME}'"
 
   stage('Checking host ...') {
     sshCommand remote: remote, command: "docker --version" , failOnError: true
     sshCommand remote: remote, command: "psql --version" , failOnError: true
   }
 
+  def POSTGRESQL_VERSION = '14'
+  def DB_NAME = 'thingsboard'
+  // backup name format = System name + database name + date + time + backup type
+  def BACKUP_FILE_NAME = "${remote.name}-${DB_NAME}-${getCurrentTime()}-FULL.sql"
+  def DB_BACK_UP_COMMAND = "sudo -u postgres sh -c 'cd \$HOME/" + POSTGRESQL_VERSION  + "/backups && pwd && pg_dump -U postgres -d ${DB_NAME} > ${BACKUP_FILE_NAME}'"
+
   stage('Backuping DB ...') {
     def BACK_UP_DIR = sshCommand remote: remote, command: DB_BACK_UP_COMMAND, failOnError: true
     sshGet remote: remote, from: BACK_UP_DIR + "/" + BACKUP_FILE_NAME, into: BACKUP_FILE_NAME, override: true, failOnError: true
   }
 
+  def DOCKER_COMPOSE_PATH = "/root/tb-compose/docker-compose.yaml"
   def DOCKER_REGISTRY_HOST = "172.16.4.10"
-  def DOCKER_PULL_COMMAND = "docker pull ${DOCKER_REGISTRY_HOST}:"
-
-  stage('Pulling docker image ...') {
-    // sshCommand remote: remote, command: DB_BACK_UP_COMMAND, failOnError: true
+  def DOCKER_REGISTRY_PORT = "5000"
+  def IMAGE_NAME = "${DOCKER_REGISTRY_HOST}:${DOCKER_REGISTRY_PORT}/controlix/tb-postgres"
+  def CONTAINER_NAME = "mytb"
+  def DOCKER_PULL_COMMAND = "docker pull ${IMAGE_NAME}"
+  def COMPOSE_DOWN = "docker compose -f ${DOCKER_COMPOSE_PATH} stop"
+  def COMPOSE_UP = "docker compose -f ${DOCKER_COMPOSE_PATH} up -d"
+  def UPGRADE_DB = "docker run -it -v ~/.mytb-data:/data --rm --add-host host.docker.internal:host-gateway -e SPRING_DATASOURCE_URL=jdbc:postgresql://host.docker.internal:5432/thingsboard -e SPRING_DATASOURCE_USERNAME=postgres -e SPRING_DATASOURCE_PASSWORD=postgre  ${IMAGE_NAME} upgrade-tb.sh"
+  def DOCKER_COMPOSE_RM = "docker compose -f ${DOCKER_COMPOSE_PATH} rm ${CONTAINER_NAME}"
+   
+  stage('Composing docker image ...') {
+  	sshCommand remote: remote, command: DOCKER_PULL_COMMAND, failOnError: true
+  	sshCommand remote: remote, command: COMPOSE_DOWN, failOnError: true
+  	sshCommand remote: remote, command: UPGRADE_DB, failOnError: true
+  	sshCommand remote: remote, command: DOCKER_COMPOSE_RM, failOnError: true
+  	sshCommand remote: remote, command: COMPOSE_UP, failOnError: true
   }
 
 }
