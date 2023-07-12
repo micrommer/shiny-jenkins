@@ -13,12 +13,11 @@ def getCurrentTime() {
 
 node {
   def remote = [:]
-  remote.name = 'dev2'
-  remote.host = '172.16.4.3'
-  remote.user = 'root'
-  remote.password = 'qw12'
-  remote.allowAnyHosts = true
-
+  remote.name = env.remote.name
+  remote.host = env.remote.host
+  remote.user = env.remote.user
+  remote.password = env.remote.password
+  remote.allowAnyHosts = env.remote.allowAnyHosts
 
   stage('Checking host ...') {
     sshCommand remote: remote, command: "docker --version" , failOnError: true
