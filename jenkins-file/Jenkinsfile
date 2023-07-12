@@ -31,14 +31,14 @@ node {
   def DOCKER_COMPOSE_PATH = "/root/tb-compose/docker-compose.yaml"
   // backup name format = System name + database name + date + time + backup type
   def BACKUP_FILE_NAME = "${remote.name}-${DB_NAME}-${getCurrentTime()}-FULL.sql"
-  // def DB_BACK_UP_COMMAND = "sudo -u postgres sh -c 'cd \$HOME/" + POSTGRESQL_VERSION  + "/backups && pwd && pg_dump -U postgres -d ${DB_NAME} > ${BACKUP_FILE_NAME}'"
-  def DB_BACK_UP_COMMAND = "docker compose -f ${DOCKER_COMPOSE_PATH} exec ${CONTAINER_NAME} /usr/bin/pg_dump -U thingsboard ${DB_NAME} > ${BACKUP_FILE_NAME} && pwd"
-  def REMOVE_BACKUP_FILE = "rm -f ${BACKUP_FILE_NAME}"	
+  def DB_BACK_UP_COMMAND = "sudo -u postgres sh -c 'cd \$HOME/" + POSTGRESQL_VERSION  + "/backups && pwd && pg_dump -U postgres -d ${DB_NAME} > ${BACKUP_FILE_NAME}'"
+  // def DB_BACK_UP_COMMAND = "docker compose -f ${DOCKER_COMPOSE_PATH} exec ${CONTAINER_NAME} /usr/bin/pg_dump -U thingsboard ${DB_NAME} > ${BACKUP_FILE_NAME} && pwd"
+  def REMOVE_BACKUP_FILE = "rm -f "
   
   stage('Backuping DB ...') {
     def BACK_UP_DIR = sshCommand remote: remote, command: DB_BACK_UP_COMMAND, failOnError: true
     sshGet remote: remote, from: BACK_UP_DIR + "/" + BACKUP_FILE_NAME, into: BACKUP_FILE_NAME, override: true, failOnError: true
-    sshCommand remote: remote, command: REMOVE_BACKUP_FILE, failOnError: true
+    sshCommand remote: remote, command: REMOVE_BACKUP_FILE + BACK_UP_DIR + "/" + BACKUP_FILE_NAME, failOnError: true
   }
 
   def DOCKER_REGISTRY_HOST = "172.16.4.10"
@@ -47,7 +47,8 @@ node {
   def DOCKER_PULL_COMMAND = "docker pull ${IMAGE_NAME}"
   def COMPOSE_DOWN = "docker compose -f ${DOCKER_COMPOSE_PATH} stop"
   def COMPOSE_UP = "docker compose -f ${DOCKER_COMPOSE_PATH} up -d"
-  def UPGRADE_DB = "docker run -i -v ~/.mytb-data:/data --rm ${IMAGE_NAME} upgrade-tb.sh"
+  def SPRING_DATA_ARGS = '-e SPRING_DATASOURCE_URL="jdbc:postgresql://172.17.0.1:5432/thingsboard" -e SPRING_DATASOURCE_USERNAME="postgres" -e SPRING_DATASOURCE_PASSWORD="postgres"'
+  def UPGRADE_DB = "docker run -i -v ~/.mytb-data:/data --rm ${SPRING_DATA_ARGS} ${IMAGE_NAME} upgrade-tb.sh"
   def DOCKER_COMPOSE_RM = "echo y | docker compose -f ${DOCKER_COMPOSE_PATH} rm ${CONTAINER_NAME}"
    
   stage('Composing docker image ...') {
