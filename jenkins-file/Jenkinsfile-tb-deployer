@@ -24,7 +24,6 @@ def getEssentialContextVariable(Object props, String name) {
     result
 }
 
-
 node {
     // load build properties, a co-work phase by envInject and Pipeline Utility Steps plugins
     if (env.propertiesFilePath == null)
@@ -57,7 +56,6 @@ node {
     // backup name format = System name + database name + date + time + backup type
     def BACKUP_FILE_NAME = "${remote.name}-${DB_NAME}-${getCurrentTime()}-FULL.sql"
     def DB_BACK_UP_COMMAND = "sudo -u postgres sh -c 'cd \$HOME/" + POSTGRESQL_VERSION + "/backups && pwd && pg_dump -U postgres -d ${DB_NAME} > ${BACKUP_FILE_NAME}'"
-    // def DB_BACK_UP_COMMAND = "docker compose -f ${DOCKER_COMPOSE_PATH} exec ${CONTAINER_NAME} /usr/bin/pg_dump -U thingsboard ${DB_NAME} > ${BACKUP_FILE_NAME} && pwd"
     def REMOVE_BACKUP_FILE = "rm -f "
 
     stage('Backuping DB ...') {
