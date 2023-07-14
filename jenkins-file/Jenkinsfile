@@ -11,6 +11,20 @@ def getCurrentTime() {
   formatter.format(timestamp)
 }
 
+// Try to resolve variable in order from environment then props, null if empty
+def getContextVariable(Object props, String name) {
+    env.getProperty(name) ?: props[name]?.trim()
+}
+
+// Try to resolve variable in order from environment then props, error if empty
+def getEssentialContextVariable(Object props, String name) {
+    def result = env.getProperty(name) ?: props[name]?.trim()
+    if (result == null)
+        error "$name is an essinsial input, please add to enviremont by file or manually."
+    result
+}
+
+
 node {
     // load build properties, a co-work phase by envInject and Pipeline Utility Steps plugins
     if (env.propertiesFilePath == null)
@@ -25,21 +39,21 @@ node {
     }
 
     def remote = [:]
-    remote.name = props['remoteName'].trim()
-    remote.host = props['remoteHost'].trim()
-    remote.user = props['remoteUser'].trim()
-    remote.password = props['remotePassword'].trim()
-    remote.allowAnyHosts = props['remoteAllowAnyHosts'].trim().toBoolean()
+    remote.name = getEssentialContextVariable(props, 'remoteName')
+    remote.host = getEssentialContextVariable(props, 'remoteHost')
+    remote.user = getEssentialContextVariable(props, 'remoteUser')
+    remote.password = getEssentialContextVariable(props, 'remotePassword')
+    remote.allowAnyHosts = getEssentialContextVariable(props, 'remoteAllowAnyHosts').toBoolean()
 
     stage('Checking host ...') {
       sshCommand remote: remote, command: "docker --version", failOnError: true
       sshCommand remote: remote, command: "psql --version", failOnError: true
     }
 
-    def POSTGRESQL_VERSION = '14'
-    def DB_NAME = 'thingsboard'
-    def CONTAINER_NAME = "mytb"
-    def DOCKER_COMPOSE_PATH = "/root/tb-compose/docker-compose.yaml"
+    def POSTGRESQL_VERSION = getContextVariable(props, 'postgresqlVersion') ?: "14"
+    def DB_NAME = getContextVariable(props, 'dbName') ?: 'thingsboard'
+    def CONTAINER_NAME = getContextVariable(props, 'containerName') ?: "mytb"
+    def DOCKER_COMPOSE_PATH = getContextVariable(props, 'dockerComposePath') ?: "/root/tb-compose/docker-compose.yaml"
     // backup name format = System name + database name + date + time + backup type
     def BACKUP_FILE_NAME = "${remote.name}-${DB_NAME}-${getCurrentTime()}-FULL.sql"
     def DB_BACK_UP_COMMAND = "sudo -u postgres sh -c 'cd \$HOME/" + POSTGRESQL_VERSION + "/backups && pwd && pg_dump -U postgres -d ${DB_NAME} > ${BACKUP_FILE_NAME}'"
@@ -52,8 +66,8 @@ node {
       sshCommand remote: remote, command: REMOVE_BACKUP_FILE + BACK_UP_DIR + "/" + BACKUP_FILE_NAME, failOnError: true
     }
 
-    def DOCKER_REGISTRY_HOST = "172.16.4.10"
-    def DOCKER_REGISTRY_PORT = "5000"
+    def DOCKER_REGISTRY_HOST = getContextVariable(props, 'dockerRegistryHost') ?: "172.16.4.10"
+    def DOCKER_REGISTRY_PORT = getContextVariable(props, 'dockerRegistryPort') ?: "5000"
     def IMAGE_NAME = "${DOCKER_REGISTRY_HOST}:${DOCKER_REGISTRY_PORT}/controlix/tb-postgres"
     def DOCKER_PULL_COMMAND = "docker pull ${IMAGE_NAME}"
     def COMPOSE_DOWN = "docker compose -f ${DOCKER_COMPOSE_PATH} stop"
