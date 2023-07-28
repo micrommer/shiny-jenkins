@@ -4,7 +4,7 @@ USER root
 
 # install required tools
 RUN apt update
-RUN apt upgrade
+RUN apt upgrade -y
 RUN apt install unzip -y
 RUN apt install zip -y
 RUN apt install curl -y
